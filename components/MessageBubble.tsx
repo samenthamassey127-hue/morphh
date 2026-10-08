@@ -1,14 +1,16 @@
 'use client';
 
-import React from 'react';
-import { Message, QuickReplyType } from '@/lib/types';
+import React, { useState } from 'react';
+import { Message, QuickReplyType, ExperimentBlock } from '@/lib/types';
 import QuickReplies from './QuickReplies';
+import ExperimentPanel from './ExperimentPanel';
 import { Bot, User } from 'lucide-react';
 
 interface MessageBubbleProps {
   message: Message;
   isLastAssistantMessage: boolean;
   onQuickReply: (type: QuickReplyType) => void;
+  onExperimentComplete?: (experimentId: string, correct: boolean) => void;
   isLoading?: boolean;
 }
 
@@ -16,9 +18,21 @@ export default function MessageBubble({
   message,
   isLastAssistantMessage,
   onQuickReply,
-  isLoading
+  onExperimentComplete,
+  isLoading,
 }: MessageBubbleProps) {
   const isAssistant = message.sender === 'assistant';
+  const [experiment, setExperiment] = useState<ExperimentBlock | undefined>(message.experiment);
+
+  const handleExperimentChange = (updated: ExperimentBlock) => {
+    setExperiment(updated);
+    if (updated.status === 'revealed' && updated.selectedAnswer !== undefined) {
+      onExperimentComplete?.(
+        updated.id,
+        updated.selectedAnswer === updated.correctAnswer
+      );
+    }
+  };
 
   return (
     <div
@@ -33,16 +47,29 @@ export default function MessageBubble({
       )}
 
       <div
-        className={`max-w-[85%] md:max-w-[75%] rounded-2xl p-4 text-sm leading-relaxed ${
+        className={`max-w-[85%] md:max-w-[75%] rounded-2xl text-sm leading-relaxed ${
           isAssistant
             ? 'bg-slate-100 dark:bg-slate-800/90 text-slate-800 dark:text-slate-100 rounded-tl-sm shadow-sm'
             : 'bg-indigo-600 text-white rounded-tr-sm shadow-sm'
         }`}
       >
-        <div className="whitespace-pre-wrap break-words">{message.text}</div>
+        {/* Text portion */}
+        {message.text && (
+          <div className="p-4 whitespace-pre-wrap break-words">{message.text}</div>
+        )}
 
-        {isAssistant && isLastAssistantMessage && !isLoading && (
-          <QuickReplies onSelect={onQuickReply} />
+        {/* Experiment block (rendered inside assistant bubble) */}
+        {isAssistant && experiment && (
+          <div className="px-4 pb-4">
+            <ExperimentPanel experiment={experiment} onChange={handleExperimentChange} />
+          </div>
+        )}
+
+        {/* Quick replies */}
+        {isAssistant && isLastAssistantMessage && !isLoading && !experiment && (
+          <div className="px-4 pb-3">
+            <QuickReplies onSelect={onQuickReply} />
+          </div>
         )}
       </div>
 
