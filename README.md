@@ -1,48 +1,146 @@
-# VibeLearn — Adaptive AI Study Buddy 🚀
+# VibeLearn 🧠
 
-VibeLearn is an adaptive AI study buddy built for students in Grades 6–12. It customizes explanation depths, analogies, and interactive challenges based on the student's grade, selected academic track, enrolled courses, learning style, and mood.
+> **"Instead of asking students how they learn, VibeLearn learns how they actually learn."**
 
----
-
-## 🌟 Key Features
-
-1. **Adaptive System Prompting**: Dynamically adjusts language complexity (Grade 6–8 simple analogies vs Grade 11–12 rigorous formulas).
-2. **Mood Overrides**: 
-   - **Bored**: Turns responses into a 2-minute quest or micro-challenge.
-   - **Confused**: Provides 1 intuitive analogy + 1 simple worked example.
-   - **Curious**: Offers advanced "What If?" deep dives.
-   - **Tired**: Gives ultra-short explanations + 30-second break tips.
-3. **Quick-Reply Feedback Loop**: `Yes`, `Kind of`, `No` buttons for immediate learning adjustments.
-4. **Local Profile Persistence**: Saves user profile state in `localStorage`.
-5. **Dark & Light Mode**: Built using `next-themes` with tailored Tailwind tokens.
-6. **Streaming Chat**: Real-time response streaming powered by `@google/generative-ai` (`gemini-2.0-flash`).
+An adaptive AI study buddy built with **Next.js 14** + **Ollama** (100% local, no cloud API keys needed).
 
 ---
 
-## 🛠 Tech Stack
+## ✨ Three Core Features
 
-- **Framework**: Next.js 14 (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **Theme**: `next-themes`
-- **Icons**: `lucide-react`
-- **AI SDK**: `@google/generative-ai`
-- **Deployment**: Vercel
+### 1. 🧠 Personal Learning Fingerprint
+VibeLearn silently tracks engagement across every interaction — quick replies, experiment results, session length — and builds a **Learning Fingerprint** that updates in real time.
+
+- Ranked activity types by actual engagement (not self-reported preference)
+- Preferred session length
+- Difficulty trajectory (Easy → Medium → Hard)
+- Best recovery strategy when a student is struggling
+
+Two students on the same topic get **completely different** learning experiences.
+
+### 2. 🧪 Experiment Mode
+Instead of giving the student the answer, VibeLearn lets them **predict → run → observe → understand**.
+
+- Curio sends a `\`\`\`experiment\`\`\`` block with a code snippet + multiple choice options
+- Student selects their prediction, then clicks **Run & Reveal**
+- Result shown with colour-coded feedback, explanation, and a Socratic follow-up question
+- Adapts to the student's fingerprint: struggling → simpler experiment; advanced → harder challenge
+
+### 3. 📶 Offline / Low-Connectivity Mode
+- Monitors Ollama availability every 15 seconds
+- Switches to **Learning Continuity Mode** automatically when offline
+- Queues questions and activities locally
+- Banner shows pending sync count; one-click **Sync now** when back online
 
 ---
 
-## 🔑 How to Get a Free Gemini API Key
+## 🚀 Quick Start
 
-1. Go to [Google AI Studio](https://aistudio.google.com/).
-2. Sign in with your Google account.
-3. Click **"Get API Key"** -> **"Create API Key in new project"**.
-4. Copy the API key.
+### Prerequisites
+- [Node.js 18+](https://nodejs.org)
+- [Ollama](https://ollama.com) installed and running
+
+### 1. Pull a model
+```bash
+ollama pull llama3
+```
+
+### 2. Start Ollama
+```bash
+ollama serve
+```
+
+### 3. Clone & install
+```bash
+git clone https://github.com/samenthamassey127-hue/morphh
+cd morphh
+npm install
+```
+
+### 4. Configure (optional)
+`.env.local` is pre-configured for Ollama defaults:
+```env
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=llama3
+```
+Change `OLLAMA_MODEL` to `mistral`, `phi3`, `gemma2`, etc. if you prefer.
+
+### 5. Run
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000)
 
 ---
 
-## ⚙️ Setup & Local Running Instructions
+## 🗂️ Project Structure
 
-1. **Clone the repository**:
-   ```bash
-   git clone [https://github.com/your-username/curio-ai-study-buddy.git](https://github.com/your-username/curio-ai-study-buddy.git)
-   cd curio-ai-study-buddy
+```
+morphh/
+├── app/
+│   ├── api/
+│   │   ├── chat/route.ts          # Ollama streaming chat endpoint
+│   │   └── ollama-status/route.ts # Health check for connectivity banner
+│   ├── layout.tsx
+│   └── page.tsx                   # Root — wires all three features together
+├── components/
+│   ├── ChatWindow.tsx             # Main chat UI + fingerprint updates
+│   ├── ConnectivityBanner.tsx     # Online/offline/no-ollama status bar
+│   ├── ExperimentPanel.tsx        # Predict → Run → Reveal UI
+│   ├── FingerprintCard.tsx        # Visual fingerprint display
+│   ├── MessageBubble.tsx          # Renders text + embedded experiments
+│   ├── QuickReplies.tsx           # Yes / Kind of / No feedback buttons
+│   ├── SideBar.tsx                # Profile + fingerprint panel
+│   └── ThemeToggle.tsx            # Dark/light mode toggle
+└── lib/
+    ├── prompt.ts                  # System prompt builder (fingerprint-aware)
+    ├── storage.ts                 # Profile, fingerprint, offline queue
+    ├── types.ts                   # All TypeScript types
+    └── utils.ts                   # cn() utility
+```
+
+---
+
+## 🔗 How the Three Features Connect
+
+```
+              VIBELEARN
+                  │
+                  ▼
+          Personal Learning
+             Fingerprint
+                  │
+          ┌───────┴────────┐
+          ▼                ▼
+   Experiment Mode    Normal Learning
+          │                │
+          └───────┬────────┘
+                  ▼
+             Performance
+                  ▼
+        Fingerprint Updated
+                  │
+                  ▼
+        Better Recommendation
+                  │
+                  ▼
+       Offline Mode if needed
+                  │
+                  ▼
+            Sync Later
+```
+
+---
+
+## 🏆 Challenge Alignment
+
+| Challenge Requirement | VibeLearn Feature |
+|---|---|
+| Personalised adaptation | Learning Fingerprint (behaviour-derived) |
+| Curiosity-driven engagement | Experiment Mode (predict → discover) |
+| Infrastructure/connectivity constraints | Offline Mode + Sync |
+
+---
+
+*Built for students everywhere — with or without internet.*
