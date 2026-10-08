@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Message, QuickReplyType, ExperimentBlock } from '@/lib/types';
 import QuickReplies from './QuickReplies';
 import ExperimentPanel from './ExperimentPanel';
-import { Bot, User } from 'lucide-react';
+import { Sparkles, User } from 'lucide-react';
 
 interface MessageBubbleProps {
   message: Message;
@@ -41,24 +41,26 @@ export default function MessageBubble({
       }`}
     >
       {isAssistant && (
-        <div className="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-sm mt-0.5">
-          <Bot className="w-4 h-4" />
+        <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-pink-600 to-purple-600 text-white flex items-center justify-center shrink-0 shadow-glow-pink mt-0.5 border border-pink-400/40">
+          <Sparkles className="w-4 h-4" />
         </div>
       )}
 
       <div
-        className={`max-w-[85%] md:max-w-[75%] rounded-2xl text-sm leading-relaxed ${
+        className={`max-w-[88%] md:max-w-[78%] rounded-2xl text-xs md:text-sm leading-relaxed ${
           isAssistant
-            ? 'bg-slate-100 dark:bg-slate-800/90 text-slate-800 dark:text-slate-100 rounded-tl-sm shadow-sm'
-            : 'bg-indigo-600 text-white rounded-tr-sm shadow-sm'
+            ? 'bg-[#181026] text-slate-100 rounded-tl-sm border border-[#321F4E] shadow-glow-card'
+            : 'bg-gradient-to-r from-pink-600 to-purple-600 text-white rounded-tr-sm shadow-glow-pink font-medium'
         }`}
       >
         {/* Text portion */}
         {message.text && (
-          <div className="p-4 whitespace-pre-wrap break-words">{message.text}</div>
+          <div className="p-4 whitespace-pre-wrap break-words leading-relaxed">
+            {message.text}
+          </div>
         )}
 
-        {/* Experiment block (rendered inside assistant bubble) */}
+        {/* Experiment block */}
         {isAssistant && experiment && (
           <div className="px-4 pb-4">
             <ExperimentPanel experiment={experiment} onChange={handleExperimentChange} />
@@ -67,14 +69,14 @@ export default function MessageBubble({
 
         {/* Quick replies */}
         {isAssistant && isLastAssistantMessage && !isLoading && !experiment && (
-          <div className="px-4 pb-3">
+          <div className="px-4 pb-3 border-t border-[#2A1842]/60 pt-2">
             <QuickReplies onSelect={onQuickReply} />
           </div>
         )}
       </div>
 
       {!isAssistant && (
-        <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center shrink-0 shadow-sm mt-0.5">
+        <div className="w-9 h-9 rounded-2xl bg-[#26143E] border border-[#482875] text-pink-300 flex items-center justify-center shrink-0 shadow-sm mt-0.5">
           <User className="w-4 h-4" />
         </div>
       )}

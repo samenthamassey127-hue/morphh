@@ -2,8 +2,49 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
+@layer base {
+  body {
+    @apply bg-[#0D0814] text-slate-100 font-sans antialiased overflow-hidden selection:bg-pink-500 selection:text-white;
+  }
+}
+
+/* Custom scrollbar for cyberpunk/cerebro dark theme */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #110B1C;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #362657;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #5E3E9C;
+}
+
+/* Glow effects */
+.cerebro-gradient-banner {
+  background: linear-gradient(135deg, #441A3D 0%, #281236 40%, #170F2B 100%);
+  border: 1px solid rgba(229, 62, 123, 0.25);
+}
+
+.cerebro-card {
+  background: #181126;
+  border: 1px solid #2B1D45;
+  transition: all 0.25s ease;
+}
+
+.cerebro-card:hover {
+  border-color: #55338E;
+  transform: translateY(-2px);
+}
+
+.cerebro-pill-active {
+  background: linear-gradient(135deg, #FF4B72 0%, #9B51E0 100%);
+  box-shadow: 0 0 15px rgba(255, 75, 114, 0.4);
 }

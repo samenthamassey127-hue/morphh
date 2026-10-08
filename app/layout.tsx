@@ -1,20 +1,17 @@
 import type { Metadata } from 'next';
-import { ThemeProvider } from 'next-themes';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'VibeLearn — Powered by Ollama',
+  title: 'CEREBRO — Adaptive AI Quest & Study Studio',
   description:
-    'Adaptive AI study buddy with Learning Fingerprint, Experiment Mode & Offline Support — powered by Ollama (local LLM)',
+    'Cyber-themed adaptive learning platform powered by Ollama with live Learning Fingerprint, Experiment Mode and Low-Connectivity sync.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className="bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans antialiased h-screen overflow-hidden">
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          {children}
-        </ThemeProvider>
+    <html lang="en" className="dark">
+      <body className="bg-[#0D0814] text-slate-100 font-sans antialiased h-screen overflow-hidden">
+        {children}
       </body>
     </html>
   );

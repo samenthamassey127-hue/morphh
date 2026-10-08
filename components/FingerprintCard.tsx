@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { LearningFingerprint, ActivityType } from '@/lib/types';
-import { Brain, TrendingUp, Clock, Zap } from 'lucide-react';
+import { Brain, TrendingUp, Clock, Zap, Sparkles } from 'lucide-react';
 
 interface FingerprintCardProps {
   fingerprint: LearningFingerprint;
@@ -15,13 +15,6 @@ const ACTIVITY_EMOJI: Record<ActivityType, string> = {
   Text: '📖',
   Experiment: '🧪',
   Quiz: '📝',
-};
-
-const TRAJECTORY_COLOR: Record<string, string> = {
-  'Easy→Medium': 'text-amber-500',
-  'Medium→Hard': 'text-indigo-500',
-  Hard: 'text-rose-500',
-  Easy: 'text-emerald-500',
 };
 
 export default function FingerprintCard({ fingerprint }: FingerprintCardProps) {
@@ -39,56 +32,77 @@ export default function FingerprintCard({ fingerprint }: FingerprintCardProps) {
     <div
       className={`transition-all duration-500 ${
         visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-      } rounded-2xl border border-indigo-200 dark:border-indigo-800 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/40 dark:to-purple-950/40 p-4 space-y-3`}
+      } rounded-2xl border border-[#39245C] bg-gradient-to-br from-[#1C122F] via-[#160D27] to-[#12081F] p-4 space-y-3.5 shadow-glow-card relative overflow-hidden`}
     >
-      <div className="flex items-center gap-2">
-        <Brain className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-        <span className="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-300">
-          Your Learning Fingerprint
+      <div className="absolute top-0 right-0 w-24 h-24 bg-pink-500/10 rounded-full blur-xl pointer-events-none" />
+
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="p-1.5 rounded-lg bg-pink-500/20 text-pink-400 border border-pink-500/30">
+            <Brain className="w-4 h-4" />
+          </div>
+          <div>
+            <span className="text-[11px] font-extrabold uppercase tracking-widest text-pink-400">
+              Live Fingerprint
+            </span>
+            <p className="text-[10px] text-slate-400">Adaptive AI Cognitive Profile</p>
+          </div>
+        </div>
+        <span className="flex h-2 w-2 relative">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-pink-500"></span>
         </span>
       </div>
 
       {/* Best activities */}
       <div>
-        <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-1 font-medium">Best for you</p>
+        <p className="text-[10px] text-slate-400 mb-1.5 font-semibold uppercase tracking-wider">
+          Top Engagement Boosters
+        </p>
         <div className="flex flex-wrap gap-1.5">
           {bestActivities.map((a) => (
             <span
               key={a}
-              className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700"
+              className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#261642] text-pink-300 border border-[#482875] flex items-center gap-1 shadow-sm"
             >
-              {ACTIVITY_EMOJI[a]} {a}
+              <span>{ACTIVITY_EMOJI[a] || '✨'}</span> {a}
             </span>
           ))}
         </div>
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-3 gap-2 text-center">
-        <div className="bg-white/60 dark:bg-slate-900/40 rounded-xl p-2">
-          <Clock className="w-3.5 h-3.5 mx-auto text-slate-500 dark:text-slate-400 mb-1" />
-          <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{preferredSessionMinutes} min</p>
-          <p className="text-[10px] text-slate-400">Session</p>
+      <div className="grid grid-cols-3 gap-2 text-center pt-1">
+        <div className="bg-[#110A1E]/80 border border-[#2B1B47] rounded-xl p-2.5">
+          <Clock className="w-3.5 h-3.5 mx-auto text-pink-400 mb-1" />
+          <p className="text-xs font-black text-slate-100">{preferredSessionMinutes}m</p>
+          <p className="text-[9px] uppercase font-semibold text-slate-400">Session</p>
         </div>
-        <div className="bg-white/60 dark:bg-slate-900/40 rounded-xl p-2">
-          <TrendingUp className="w-3.5 h-3.5 mx-auto text-slate-500 dark:text-slate-400 mb-1" />
-          <p className={`text-[10px] font-bold ${TRAJECTORY_COLOR[difficultyTrajectory]}`}>
+        <div className="bg-[#110A1E]/80 border border-[#2B1B47] rounded-xl p-2.5">
+          <TrendingUp className="w-3.5 h-3.5 mx-auto text-purple-400 mb-1" />
+          <p className="text-[10px] font-black text-purple-300 leading-tight">
             {difficultyTrajectory}
           </p>
-          <p className="text-[10px] text-slate-400">Difficulty</p>
+          <p className="text-[9px] uppercase font-semibold text-slate-400">Level</p>
         </div>
-        <div className="bg-white/60 dark:bg-slate-900/40 rounded-xl p-2">
-          <Zap className="w-3.5 h-3.5 mx-auto text-slate-500 dark:text-slate-400 mb-1" />
-          <p className="text-[10px] font-bold text-slate-800 dark:text-slate-100 leading-tight">
+        <div className="bg-[#110A1E]/80 border border-[#2B1B47] rounded-xl p-2.5">
+          <Zap className="w-3.5 h-3.5 mx-auto text-amber-400 mb-1" />
+          <p className="text-[9px] font-extrabold text-amber-200 leading-tight truncate">
             {bestRecoveryStrategy}
           </p>
-          <p className="text-[10px] text-slate-400">Recovery</p>
+          <p className="text-[9px] uppercase font-semibold text-slate-400">Recovery</p>
         </div>
       </div>
 
-      <p className="text-[10px] text-slate-400 dark:text-slate-500 italic">
-        Learned from your real interactions · updates as you learn
-      </p>
+      <div className="pt-1 flex items-center justify-between text-[10px] text-slate-400 border-t border-[#26173E]">
+        <span className="flex items-center gap-1 text-pink-400/90 font-medium">
+          <Sparkles className="w-3 h-3" /> Adapts with Ollama
+        </span>
+        <span className="font-mono text-[9px] text-slate-500">
+          {fingerprint.engagementHistory.length} interactions
+        </span>
+      </div>
     </div>
   );
 }

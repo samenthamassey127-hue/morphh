@@ -1,10 +1,31 @@
 'use client';
 
 import React from 'react';
-import { StudentProfile, GradeLevel, TrackGroup, Course, Mood, LearningStyle, LearningFingerprint } from '@/lib/types';
-import ThemeToggle from './ThemeToggle';
+import {
+  StudentProfile,
+  GradeLevel,
+  TrackGroup,
+  Course,
+  Mood,
+  LearningStyle,
+  LearningFingerprint,
+} from '@/lib/types';
 import FingerprintCard from './FingerprintCard';
-import { Sparkles, BookOpen, Brain, Smile, Layers, X } from 'lucide-react';
+import {
+  Home,
+  Gamepad2,
+  ListMusic,
+  Heart,
+  BarChart2,
+  Settings,
+  HelpCircle,
+  BookOpen,
+  Sparkles,
+  X,
+  Layers,
+  Smile,
+  Brain,
+} from 'lucide-react';
 
 interface SidebarProps {
   profile: StudentProfile;
@@ -17,13 +38,21 @@ interface SidebarProps {
 const GRADES: GradeLevel[] = [6, 7, 8, 9, 10, 11, 12];
 const TRACKS: TrackGroup[] = ['General', 'Science', 'Commerce', 'Arts', 'STEM', 'Exam Prep'];
 const ALL_COURSES: Course[] = [
-  'Math', 'Science', 'English', 'Social Studies',
-  'Computer Science', 'Physics', 'Chemistry', 'Biology', 'History', 'Geography',
+  'Math',
+  'Science',
+  'English',
+  'Social Studies',
+  'Computer Science',
+  'Physics',
+  'Chemistry',
+  'Biology',
+  'History',
+  'Geography',
 ];
 const MOODS: Mood[] = ['Bored', 'Confused', 'Curious', 'Tired', 'Okay'];
 const LEARNING_STYLES: LearningStyle[] = ['Examples', 'Stories', 'Steps', 'Quizzes', 'Visuals'];
 
-export default function Sidebar({ profile, onChange, fingerprint, isOpen, onClose }: SidebarProps) {
+export default function Sidebar({ profile, onChange, fingerprint, onClose }: SidebarProps) {
   const handleCourseToggle = (course: Course) => {
     const updatedCourses = profile.courses.includes(course)
       ? profile.courses.filter((c) => c !== course)
@@ -32,60 +61,94 @@ export default function Sidebar({ profile, onChange, fingerprint, isOpen, onClos
   };
 
   return (
-    <aside className="w-full md:w-80 bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col h-full overflow-y-auto p-5 transition-all">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <div className="p-2 bg-indigo-600 text-white rounded-xl shadow-md">
-            <Sparkles className="w-5 h-5" />
+    <aside className="w-full md:w-80 bg-[#120B1F] border-r border-[#26163D] flex flex-col h-full overflow-y-auto p-4 md:p-5 transition-all text-slate-200">
+      {/* Brand Header */}
+      <div className="flex items-center justify-between mb-5 pb-3 border-b border-[#26173E]">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-pink-600 to-purple-600 flex items-center justify-center text-white shadow-glow-pink">
+            <Brain className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="font-bold text-lg text-slate-900 dark:text-slate-100 leading-tight">VibeLearn</h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Powered by Ollama</p>
+            <h1 className="font-black text-xl tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-rose-300 to-purple-300">
+              CEREBRO
+            </h1>
+            <p className="text-[10px] text-pink-400/80 font-mono tracking-tight">Adaptive Study Studio</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <ThemeToggle />
-          {onClose && (
-            <button
-              onClick={onClose}
-              className="md:hidden p-2 rounded-xl text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          )}
+
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="md:hidden p-1.5 rounded-lg text-slate-400 hover:bg-[#25153E]"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
+      </div>
+
+      {/* Nav pill list matching screenshot */}
+      <div className="space-y-1 mb-5">
+        <button className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-pink-600 to-purple-600 text-white shadow-glow-pink">
+          <Home className="w-4 h-4" />
+          <span>Home Quest Hub</span>
+        </button>
+
+        <div className="pt-2 text-[10px] font-extrabold tracking-wider text-slate-400 uppercase px-2">
+          Library
+        </div>
+        <div className="space-y-0.5 text-xs text-slate-400">
+          <button className="w-full flex items-center gap-3 px-3 py-1.5 rounded-lg hover:text-pink-300 hover:bg-[#1B112D] transition-colors">
+            <Gamepad2 className="w-3.5 h-3.5 text-pink-400" />
+            <span>Games & Quests</span>
+          </button>
+          <button className="w-full flex items-center gap-3 px-3 py-1.5 rounded-lg hover:text-pink-300 hover:bg-[#1B112D] transition-colors">
+            <ListMusic className="w-3.5 h-3.5 text-purple-400" />
+            <span>Learning Playlists</span>
+          </button>
+          <button className="w-full flex items-center gap-3 px-3 py-1.5 rounded-lg hover:text-pink-300 hover:bg-[#1B112D] transition-colors">
+            <Heart className="w-3.5 h-3.5 text-rose-400" />
+            <span>Favorites</span>
+          </button>
+        </div>
+
+        <div className="pt-2 text-[10px] font-extrabold tracking-wider text-slate-400 uppercase px-2">
+          Studio
+        </div>
+        <div className="space-y-0.5 text-xs text-slate-400">
+          <button className="w-full flex items-center gap-3 px-3 py-1.5 rounded-lg hover:text-pink-300 hover:bg-[#1B112D] transition-colors">
+            <BarChart2 className="w-3.5 h-3.5 text-amber-400" />
+            <span>Cognitive Analytics</span>
+          </button>
+          <button className="w-full flex items-center gap-3 px-3 py-1.5 rounded-lg hover:text-pink-300 hover:bg-[#1B112D] transition-colors">
+            <Settings className="w-3.5 h-3.5 text-slate-400" />
+            <span>Ollama Settings</span>
+          </button>
         </div>
       </div>
 
-      <div className="space-y-5 flex-1">
-        {/* Learning Fingerprint */}
-        {fingerprint && fingerprint.engagementHistory.length > 0 && (
-          <FingerprintCard fingerprint={fingerprint} />
-        )}
-        {fingerprint && fingerprint.engagementHistory.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-indigo-200 dark:border-indigo-800 p-4 text-center text-xs text-slate-400 dark:text-slate-500">
-            🧠 <strong className="text-indigo-500">Learning Fingerprint</strong> will appear here after your first interaction.
-          </div>
-        )}
+      {/* Profile controls container */}
+      <div className="space-y-4 pt-3 border-t border-[#25153E]">
+        {/* Learning Fingerprint card */}
+        {fingerprint && <FingerprintCard fingerprint={fingerprint} />}
 
-        {/* Name */}
+        {/* Student name */}
         <div>
-          <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1 block">
-            Student Name
+          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1 block">
+            Student Identity
           </label>
           <input
             type="text"
             value={profile.name || ''}
             onChange={(e) => onChange({ ...profile, name: e.target.value })}
-            placeholder="Your name"
-            className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            placeholder="Ayo"
+            className="w-full px-3 py-2 rounded-xl border border-[#352156] bg-[#190F2C] text-slate-100 text-xs focus:outline-none focus:border-pink-500 font-medium placeholder-slate-500"
           />
         </div>
 
-        {/* Grade */}
+        {/* Grade Level */}
         <div>
-          <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1.5">
-            <BookOpen className="w-3.5 h-3.5" /> Grade Level
+          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 flex items-center gap-1.5">
+            <BookOpen className="w-3 h-3 text-pink-400" /> Grade Level
           </label>
           <div className="grid grid-cols-4 gap-1.5">
             {GRADES.map((g) => (
@@ -93,13 +156,13 @@ export default function Sidebar({ profile, onChange, fingerprint, isOpen, onClos
                 key={g}
                 type="button"
                 onClick={() => onChange({ ...profile, grade: g })}
-                className={`py-1.5 text-xs font-medium rounded-lg border transition-all ${
+                className={`py-1 text-xs font-bold rounded-lg border transition-all ${
                   profile.grade === g
-                    ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm'
-                    : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-indigo-400'
+                    ? 'bg-pink-600 border-pink-500 text-white shadow-glow-pink'
+                    : 'bg-[#180E2B] border-[#311E52] text-slate-300 hover:border-pink-500/50'
                 }`}
               >
-                {g}
+                G-{g}
               </button>
             ))}
           </div>
@@ -107,24 +170,26 @@ export default function Sidebar({ profile, onChange, fingerprint, isOpen, onClos
 
         {/* Track */}
         <div>
-          <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1.5">
-            <Layers className="w-3.5 h-3.5" /> Track
+          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 flex items-center gap-1.5">
+            <Layers className="w-3 h-3 text-purple-400" /> Track Focus
           </label>
           <select
             value={profile.group}
             onChange={(e) => onChange({ ...profile, group: e.target.value as TrackGroup })}
-            className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-3 py-2 rounded-xl border border-[#352156] bg-[#190F2C] text-slate-200 text-xs focus:outline-none focus:border-pink-500 font-medium"
           >
             {TRACKS.map((t) => (
-              <option key={t} value={t}>{t}</option>
+              <option key={t} value={t} className="bg-[#120B1F]">
+                {t}
+              </option>
             ))}
           </select>
         </div>
 
         {/* Mood */}
         <div>
-          <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1.5">
-            <Smile className="w-3.5 h-3.5" /> Current Mood
+          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 flex items-center gap-1.5">
+            <Smile className="w-3 h-3 text-amber-400" /> Current Mood
           </label>
           <div className="flex flex-wrap gap-1.5">
             {MOODS.map((m) => (
@@ -132,10 +197,10 @@ export default function Sidebar({ profile, onChange, fingerprint, isOpen, onClos
                 key={m}
                 type="button"
                 onClick={() => onChange({ ...profile, mood: m })}
-                className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-all ${
+                className={`px-2.5 py-1 text-[11px] font-bold rounded-full border transition-all ${
                   profile.mood === m
-                    ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm'
-                    : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-indigo-400'
+                    ? 'bg-gradient-to-r from-pink-600 to-purple-600 border-pink-400 text-white shadow-glow-pink'
+                    : 'bg-[#190E2C] border-[#341F54] text-slate-300 hover:border-pink-500/50'
                 }`}
               >
                 {m}
@@ -146,24 +211,26 @@ export default function Sidebar({ profile, onChange, fingerprint, isOpen, onClos
 
         {/* Learning Style */}
         <div>
-          <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1.5">
-            <Brain className="w-3.5 h-3.5" /> Preferred Style
+          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 flex items-center gap-1.5">
+            <Brain className="w-3 h-3 text-pink-400" /> Teaching Persona
           </label>
           <select
             value={profile.learningStyle}
             onChange={(e) => onChange({ ...profile, learningStyle: e.target.value as LearningStyle })}
-            className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-3 py-2 rounded-xl border border-[#352156] bg-[#190F2C] text-slate-200 text-xs focus:outline-none focus:border-pink-500 font-medium"
           >
             {LEARNING_STYLES.map((style) => (
-              <option key={style} value={style}>{style}</option>
+              <option key={style} value={style} className="bg-[#120B1F]">
+                {style}
+              </option>
             ))}
           </select>
         </div>
 
         {/* Courses */}
         <div>
-          <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 block">
-            Courses
+          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 block">
+            Enrolled Quests / Courses
           </label>
           <div className="flex flex-wrap gap-1.5">
             {ALL_COURSES.map((c) => {
@@ -173,10 +240,10 @@ export default function Sidebar({ profile, onChange, fingerprint, isOpen, onClos
                   key={c}
                   type="button"
                   onClick={() => handleCourseToggle(c)}
-                  className={`px-2.5 py-1 text-xs font-medium rounded-lg border transition-all ${
+                  className={`px-2 py-0.5 text-[10px] font-semibold rounded-lg border transition-all ${
                     selected
-                      ? 'bg-indigo-100 dark:bg-indigo-950/60 border-indigo-500 text-indigo-700 dark:text-indigo-300'
-                      : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                      ? 'bg-pink-500/20 border-pink-500 text-pink-200'
+                      : 'bg-[#180E2B] border-[#311E52] text-slate-400 hover:border-slate-500'
                   }`}
                 >
                   {selected ? '✓ ' : ''}{c}
@@ -184,6 +251,17 @@ export default function Sidebar({ profile, onChange, fingerprint, isOpen, onClos
               );
             })}
           </div>
+        </div>
+      </div>
+
+      {/* Mascot card at bottom matching screenshot */}
+      <div className="mt-5 p-3 rounded-2xl bg-gradient-to-br from-[#24133A] to-[#160A26] border border-[#44266C] flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-pink-500/20 text-pink-400 border border-pink-500/30 flex items-center justify-center shrink-0">
+          <Sparkles className="w-5 h-5" />
+        </div>
+        <div>
+          <p className="text-xs font-bold text-slate-200 leading-tight">Master New Skills</p>
+          <p className="text-[10px] text-pink-400 font-mono">One Quest at a Time</p>
         </div>
       </div>
     </aside>

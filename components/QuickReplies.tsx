@@ -2,42 +2,37 @@
 
 import React from 'react';
 import { QuickReplyType } from '@/lib/types';
-import { CheckCircle2, HelpCircle, XCircle } from 'lucide-react';
+import { Check, HelpCircle, RotateCcw } from 'lucide-react';
 
 interface QuickRepliesProps {
   onSelect: (type: QuickReplyType) => void;
-  disabled?: boolean;
 }
 
-export default function QuickReplies({ onSelect, disabled }: QuickRepliesProps) {
+export default function QuickReplies({ onSelect }: QuickRepliesProps) {
   return (
-    <div className="flex flex-wrap items-center gap-2 mt-3 pt-2 border-t border-slate-100 dark:border-slate-800/60">
-      <span className="text-xs text-slate-400 font-medium mr-1">Feedback response:</span>
+    <div className="flex flex-wrap gap-2 mt-2">
       <button
         onClick={() => onSelect('Yes')}
-        disabled={disabled}
-        className="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-colors disabled:opacity-50"
+        className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#132A24] border border-emerald-500/50 text-emerald-300 hover:bg-emerald-900/60 hover:border-emerald-400 transition-all flex items-center gap-1.5 shadow-sm"
       >
-        <CheckCircle2 className="w-3.5 h-3.5" />
-        Yes
+        <Check className="w-3.5 h-3.5 text-emerald-400" />
+        <span>Got it! Challenge me 🧩</span>
       </button>
 
       <button
         onClick={() => onSelect('Kind of')}
-        disabled={disabled}
-        className="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 hover:bg-amber-100 dark:hover:bg-amber-900/60 transition-colors disabled:opacity-50"
+        className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#2C2114] border border-amber-500/50 text-amber-300 hover:bg-amber-900/60 hover:border-amber-400 transition-all flex items-center gap-1.5 shadow-sm"
       >
-        <HelpCircle className="w-3.5 h-3.5" />
-        Kind of
+        <HelpCircle className="w-3.5 h-3.5 text-amber-400" />
+        <span>Kind of · Simpler analogy 🎨</span>
       </button>
 
       <button
         onClick={() => onSelect('No')}
-        disabled={disabled}
-        className="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-full bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 hover:bg-rose-100 dark:hover:bg-rose-900/60 transition-colors disabled:opacity-50"
+        className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#2A111F] border border-rose-500/50 text-rose-300 hover:bg-rose-900/60 hover:border-rose-400 transition-all flex items-center gap-1.5 shadow-sm"
       >
-        <XCircle className="w-3.5 h-3.5" />
-        No
+        <RotateCcw className="w-3.5 h-3.5 text-rose-400" />
+        <span>No · Re-explain simply 🔄</span>
       </button>
     </div>
   );
