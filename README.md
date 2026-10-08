@@ -1,6 +1,6 @@
-# Curio — Adaptive AI Study Buddy 🚀
+# VibeLearn — Adaptive AI Study Buddy 🚀
 
-Curio is an adaptive AI study buddy built for students in Grades 6–12. It customizes explanation depths, analogies, and interactive challenges based on the student's grade, selected academic track, enrolled courses, learning style, and mood.
+VibeLearn is an adaptive AI study buddy built for students in Grades 6–12. It customizes explanation depths, analogies, and interactive challenges based on the student's grade, selected academic track, enrolled courses, learning style, and mood.
 
 ---
 
