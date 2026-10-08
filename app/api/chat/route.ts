@@ -1,55 +1,87 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { buildSystemPrompt } from '@/lib/prompt';
-import { StudentProfile } from '@/lib/types';
+import { StudentProfile, LearningFingerprint } from '@/lib/types';
 
-export const runtime = 'edge';
+// Ollama runs locally — do NOT use edge runtime (no Node.js net in edge)
+export const runtime = 'nodejs';
+
+const OLLAMA_BASE = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3';
 
 export async function POST(req: NextRequest) {
   try {
-    const apiKey = process.env.GOOGLE_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: 'GOOGLE_API_KEY is missing in environment variables.' },
-        { status: 500 }
-      );
-    }
-
     const body = await req.json();
-    const { messages, profile } = body as { messages: Array<{ role: 'user' | 'model'; parts: string }>; profile: StudentProfile };
+    const {
+      messages,
+      profile,
+      fingerprint,
+    } = body as {
+      messages: Array<{ role: 'user' | 'assistant'; content: string }>;
+      profile: StudentProfile;
+      fingerprint?: LearningFingerprint;
+    };
 
     if (!messages || !Array.isArray(messages)) {
       return NextResponse.json({ error: 'Invalid messages array' }, { status: 400 });
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const systemInstruction = buildSystemPrompt(profile);
+    const systemPrompt = buildSystemPrompt(profile, fingerprint);
 
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash',
-      systemInstruction: systemInstruction,
+    // Build Ollama chat messages
+    const ollamaMessages = [
+      { role: 'system', content: systemPrompt },
+      ...messages,
+    ];
+
+    // Call Ollama streaming endpoint
+    const ollamaRes = await fetch(`${OLLAMA_BASE}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: OLLAMA_MODEL,
+        messages: ollamaMessages,
+        stream: true,
+      }),
     });
 
-    // Format chat history for Gemini SDK
-    const history = messages.slice(0, -1).map((msg) => ({
-      role: msg.role === 'user' ? 'user' : 'model',
-      parts: [{ text: msg.parts }],
-    }));
+    if (!ollamaRes.ok) {
+      const errText = await ollamaRes.text();
+      console.error('Ollama error:', errText);
+      return NextResponse.json(
+        { error: `Ollama returned ${ollamaRes.status}: ${errText}` },
+        { status: 502 }
+      );
+    }
 
-    const lastUserMessage = messages[messages.length - 1]?.parts || '';
-
-    const chat = model.startChat({ history });
-    const resultStream = await chat.sendMessageStream(lastUserMessage);
-
-    // Create ReadableStream to stream tokens back to client
+    // Stream tokens back to the client
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
       async start(controller) {
+        const reader = ollamaRes.body?.getReader();
+        if (!reader) {
+          controller.close();
+          return;
+        }
+        const decoder = new TextDecoder();
         try {
-          for await (const chunk of resultStream.stream) {
-            const text = chunk.text();
-            if (text) {
-              controller.enqueue(encoder.encode(text));
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            const raw = decoder.decode(value, { stream: true });
+            // Ollama sends newline-delimited JSON objects
+            for (const line of raw.split('\n')) {
+              if (!line.trim()) continue;
+              try {
+                const json = JSON.parse(line);
+                const token = json?.message?.content ?? '';
+                if (token) controller.enqueue(encoder.encode(token));
+                if (json?.done) {
+                  controller.close();
+                  return;
+                }
+              } catch {
+                // partial JSON — skip
+              }
             }
           }
           controller.close();
@@ -63,10 +95,11 @@ export async function POST(req: NextRequest) {
       headers: {
         'Content-Type': 'text/plain; charset=utf-8',
         'Transfer-Encoding': 'chunked',
+        'X-Model': OLLAMA_MODEL,
       },
     });
   } catch (error: any) {
-    console.error('Gemini API Error:', error);
+    console.error('Chat API Error:', error);
     return NextResponse.json(
       { error: error?.message || 'Internal server error' },
       { status: 500 }
