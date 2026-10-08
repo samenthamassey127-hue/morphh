@@ -1,136 +1,211 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
-import { StudentProfile, Message, QuickReplyType } from '@/lib/types';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { StudentProfile, Message, QuickReplyType, ExperimentBlock, LearningFingerprint } from '@/lib/types';
 import MessageBubble from './MessageBubble';
-import { Send, Menu, Sparkles, RefreshCw } from 'lucide-react';
+import { Send, Menu, Sparkles, RefreshCw, FlaskConical } from 'lucide-react';
+import { getFingerprint, updateFingerprint } from '@/lib/storage';
+import { enqueueOffline } from '@/lib/storage';
 
 interface ChatWindowProps {
   profile: StudentProfile;
   onOpenMobileSidebar: () => void;
+  isOnline: boolean;
+  onFingerprintUpdate?: (fp: LearningFingerprint) => void;
 }
 
-export default function ChatWindow({ profile, onOpenMobileSidebar }: ChatWindowProps) {
+/**
+ * Parse an ```experiment ... ``` fenced block out of the assistant response text.
+ * Returns { textBefore, experiment | null }
+ */
+function parseExperiment(text: string): { cleanText: string; experiment: ExperimentBlock | null } {
+  const match = text.match(/```experiment\s*([\s\S]*?)```/);
+  if (!match) return { cleanText: text, experiment: null };
+  try {
+    const json = JSON.parse(match[1].trim());
+    const experiment: ExperimentBlock = {
+      id: Date.now().toString(),
+      code: json.code ?? '',
+      language: json.language ?? 'code',
+      question: json.question ?? 'What will this output?',
+      options: json.options ?? [],
+      correctAnswer: json.correctAnswer ?? '',
+      explanation: json.explanation ?? '',
+      followUp: json.followUp ?? '',
+      status: 'predicting',
+    };
+    const cleanText = text.replace(/```experiment[\s\S]*?```/, '').trim();
+    return { cleanText, experiment };
+  } catch {
+    return { cleanText: text, experiment: null };
+  }
+}
+
+export default function ChatWindow({
+  profile,
+  onOpenMobileSidebar,
+  isOnline,
+  onFingerprintUpdate,
+}: ChatWindowProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
 
   useEffect(() => {
     scrollToBottom();
   }, [messages, isLoading]);
 
-  // Seed question suggestions based on profile
   const getSeedQuestions = (): string[] => {
     if (profile.grade <= 8) {
       return [
-        "Why is the sky blue?",
-        "How do plants turn sunlight into energy?",
-        "What is friction and why does it slow things down?"
+        'Why is the sky blue?',
+        'How do plants turn sunlight into energy?',
+        'What is friction and why does it slow things down?',
       ];
     } else if (profile.grade <= 10) {
       return [
         "Explain Newton's second law of motion with steps.",
-        "How does quadratic equation factorization work?",
-        "What is photosyntehsis in terms of chemical reactions?"
+        'How does quadratic equation factorization work?',
+        'Show me a Python experiment on loops!',
       ];
     } else {
       return [
-        "Derive the formula for time dilation in special relativity.",
-        "How do oxidation-reduction (redox) balancing equations work?",
-        "Explain the mechanism of enzyme catalysis in biochemistry."
+        'Derive the formula for time dilation in special relativity.',
+        'How do redox balancing equations work?',
+        'Give me a Python experiment on recursion.',
       ];
     }
   };
 
-  const handleSend = async (textToSend?: string) => {
-    const query = textToSend || input.trim();
-    if (!query || isLoading) return;
+  const handleSend = useCallback(
+    async (textToSend?: string) => {
+      const query = textToSend || input.trim();
+      if (!query || isLoading) return;
 
-    const userMsg: Message = {
-      id: Date.now().toString(),
-      sender: 'user',
-      text: query,
-      timestamp: Date.now()
-    };
+      const userMsg: Message = {
+        id: Date.now().toString(),
+        sender: 'user',
+        text: query,
+        timestamp: Date.now(),
+      };
 
-    const newMessages = [...messages, userMsg];
-    setMessages(newMessages);
-    if (!textToSend) setInput('');
-    setIsLoading(true);
+      const newMessages = [...messages, userMsg];
+      setMessages(newMessages);
+      if (!textToSend) setInput('');
+      setIsLoading(true);
 
-    try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: newMessages.map(m => ({
-            role: m.sender === 'user' ? 'user' : 'model',
-            parts: m.text
-          })),
-          profile
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP Error ${response.status}`);
+      // If offline: enqueue and show cached response
+      if (!isOnline) {
+        enqueueOffline({ query, profile: profile.name });
+        setTimeout(() => {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: (Date.now() + 1).toString(),
+              sender: 'assistant',
+              text: `📶 You're in offline mode. Your question has been saved and will be answered when you reconnect.\n\nMeanwhile, try reviewing your saved lessons or completing a cached quiz.`,
+              timestamp: Date.now(),
+            },
+          ]);
+          setIsLoading(false);
+        }, 600);
+        return;
       }
 
-      const assistantMsgId = (Date.now() + 1).toString();
-      setMessages(prev => [
-        ...prev,
-        { id: assistantMsgId, sender: 'assistant', text: '', timestamp: Date.now() }
-      ]);
+      try {
+        const fingerprint = getFingerprint();
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: newMessages.map((m) => ({
+              role: m.sender === 'user' ? 'user' : 'assistant',
+              content: m.text,
+            })),
+            profile,
+            fingerprint,
+          }),
+        });
 
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
-      if (reader) {
-        let accumulatedText = '';
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          const chunk = decoder.decode(value, { stream: true });
-          accumulatedText += chunk;
+        const assistantMsgId = (Date.now() + 1).toString();
+        setMessages((prev) => [
+          ...prev,
+          { id: assistantMsgId, sender: 'assistant', text: '', timestamp: Date.now() },
+        ]);
 
-          setMessages(prev =>
-            prev.map(m => (m.id === assistantMsgId ? { ...m, text: accumulatedText } : m))
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
+
+        if (reader) {
+          let accumulated = '';
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            accumulated += decoder.decode(value, { stream: true });
+            setMessages((prev) =>
+              prev.map((m) => (m.id === assistantMsgId ? { ...m, text: accumulated } : m))
+            );
+          }
+
+          // Post-process: extract experiment block if present
+          const { cleanText, experiment } = parseExperiment(accumulated);
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantMsgId ? { ...m, text: cleanText, experiment: experiment ?? undefined } : m
+            )
           );
+
+          // Update fingerprint: text answer = +5 engagement (baseline)
+          const updatedFp = updateFingerprint(fingerprint, experiment ? 'Experiment' : 'Text', experiment ? 12 : 5);
+          onFingerprintUpdate?.(updatedFp);
         }
+      } catch (err: any) {
+        console.error('Chat error:', err);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now().toString(),
+            sender: 'assistant',
+            text: `⚠️ Couldn't reach Ollama. Make sure it's running with:\n\n\`ollama serve\`\n\nAnd you have a model pulled:\n\`ollama pull llama3\``,
+            timestamp: Date.now(),
+          },
+        ]);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (err: any) {
-      console.error('Chat error:', err);
-      setMessages(prev => [
-        ...prev,
-        {
-          id: Date.now().toString(),
-          sender: 'assistant',
-          text: "Oops! Something went wrong communicating with Curio. Please check your GOOGLE_API_KEY environment variable.",
-          timestamp: Date.now()
-        }
-      ]);
-    } finally {
-      setIsLoading(false);
+    },
+    [input, isLoading, messages, profile, isOnline, onFingerprintUpdate]
+  );
+
+  const handleQuickReply = (type: QuickReplyType) => {
+    const fingerprint = getFingerprint();
+    if (type === 'Yes') {
+      updateFingerprint(fingerprint, 'Challenge', 20);
+      handleSend('Yes! Give me a 2-minute micro-challenge to test my understanding.');
+    } else if (type === 'Kind of') {
+      updateFingerprint(fingerprint, 'Visual', 8);
+      handleSend('Kind of. Can you explain that again using a simpler analogy?');
+    } else if (type === 'No') {
+      updateFingerprint(fingerprint, 'Text', -10);
+      handleSend("No, I didn't get it. Please re-explain from scratch in the absolute simplest way.");
     }
   };
 
-  const handleQuickReply = (type: QuickReplyType) => {
-    if (type === 'Yes') {
-      handleSend("Yes! Give me a 2-minute micro-challenge to test my understanding.");
-    } else if (type === 'Kind of') {
-      handleSend("Kind of. Can you explain that again using a simpler analogy?");
-    } else if (type === 'No') {
-      handleSend("No, I didn't get it. Please re-explain from scratch in the absolute simplest way with a fresh example.");
-    }
+  const handleExperimentComplete = (_id: string, correct: boolean) => {
+    const fingerprint = getFingerprint();
+    const delta = correct ? 31 : 8; // big positive for correct, smaller for engagement even if wrong
+    const updated = updateFingerprint(fingerprint, 'Experiment', delta);
+    onFingerprintUpdate?.(updated);
   };
 
   return (
     <div className="flex-1 flex flex-col h-full bg-white dark:bg-slate-950 overflow-hidden">
-      {/* Top Bar with Profile Chips */}
+      {/* Top Bar */}
       <header className="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50 backdrop-blur-md">
         <div className="flex items-center gap-3">
           <button
@@ -148,8 +223,13 @@ export default function ChatWindow({ profile, onOpenMobileSidebar }: ChatWindowP
               {profile.group}
             </span>
             <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-              Mood: {profile.mood}
+              {profile.mood}
             </span>
+            {!isOnline && (
+              <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800">
+                📶 Offline
+              </span>
+            )}
           </div>
         </div>
 
@@ -164,7 +244,7 @@ export default function ChatWindow({ profile, onOpenMobileSidebar }: ChatWindowP
         )}
       </header>
 
-      {/* Messages area */}
+      {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
         {messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center max-w-lg mx-auto p-4">
@@ -174,21 +254,29 @@ export default function ChatWindow({ profile, onOpenMobileSidebar }: ChatWindowP
             <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">
               Hey {profile.name || 'there'}, I'm Curio!
             </h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
-              Your adaptive AI study buddy. Ask me any question, and I'll adapt my response to your Grade {profile.grade} level and current mood ({profile.mood}).
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">
+              Powered by Ollama · running locally on your machine
+            </p>
+            <p className="text-xs text-slate-400 dark:text-slate-500 mb-6">
+              I learn <em>how you learn</em> and adapt every session to your fingerprint.
             </p>
 
             <div className="w-full space-y-2 text-left">
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                Suggested Questions:
+                Try these:
               </p>
               {getSeedQuestions().map((q, idx) => (
                 <button
                   key={idx}
                   onClick={() => handleSend(q)}
-                  className="w-full text-left p-3 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-indigo-500 dark:hover:border-indigo-500 bg-slate-50 dark:bg-slate-900/50 text-slate-800 dark:text-slate-200 text-sm transition-all hover:shadow-sm"
+                  className="w-full text-left p-3 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-indigo-500 dark:hover:border-indigo-500 bg-slate-50 dark:bg-slate-900/50 text-slate-800 dark:text-slate-200 text-sm transition-all hover:shadow-sm flex items-center gap-2"
                 >
-                  "{q}"
+                  {q.toLowerCase().includes('experiment') ? (
+                    <FlaskConical className="w-4 h-4 text-emerald-500 shrink-0" />
+                  ) : (
+                    <Sparkles className="w-4 h-4 text-indigo-400 shrink-0" />
+                  )}
+                  {q}
                 </button>
               ))}
             </div>
@@ -200,6 +288,7 @@ export default function ChatWindow({ profile, onOpenMobileSidebar }: ChatWindowP
               message={msg}
               isLastAssistantMessage={index === messages.length - 1 && msg.sender === 'assistant'}
               onQuickReply={handleQuickReply}
+              onExperimentComplete={handleExperimentComplete}
               isLoading={isLoading && index === messages.length - 1}
             />
           ))
@@ -207,14 +296,14 @@ export default function ChatWindow({ profile, onOpenMobileSidebar }: ChatWindowP
 
         {isLoading && (
           <div className="flex items-center gap-2 text-slate-400 text-xs italic ml-11 my-2">
-            <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
-            Curio is thinking...
+            <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+            Curio is thinking…
           </div>
         )}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Form */}
+      {/* Input */}
       <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
         <form
           onSubmit={(e) => {
@@ -227,7 +316,11 @@ export default function ChatWindow({ profile, onOpenMobileSidebar }: ChatWindowP
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder={`Ask anything about ${profile.courses.join(', ') || 'your subjects'}...`}
+            placeholder={
+              isOnline
+                ? `Ask anything about ${profile.courses.join(', ') || 'your subjects'}…`
+                : '📶 Offline — questions saved for later'
+            }
             disabled={isLoading}
             className="flex-1 px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
