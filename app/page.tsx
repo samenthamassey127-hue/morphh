@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import Sidebar from '@/components/SideBar';
+import Sidebar from '@/components/Sidebar';
 import ChatWindow from '@/components/ChatWindow';
 import ConnectivityBanner from '@/components/ConnectivityBanner';
 import { StudentProfile, LearningFingerprint } from '@/lib/types';
