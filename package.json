@@ -1,6 +1,6 @@
 {
-  "name": "morph-ai-study-buddy",
-  "version": "0.1.0",
+  "name": "vibelearn",
+  "version": "2.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -9,7 +9,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.21.0",
     "clsx": "^2.1.1",
     "lucide-react": "^0.453.0",
     "next": "14.2.15",
