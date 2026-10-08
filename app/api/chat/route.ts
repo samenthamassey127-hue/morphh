@@ -6,7 +6,7 @@ import { StudentProfile, LearningFingerprint } from '@/lib/types';
 export const runtime = 'nodejs';
 
 const OLLAMA_BASE = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3';
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3.2:1b';
 
 export async function POST(req: NextRequest) {
   try {

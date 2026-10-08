@@ -8,7 +8,7 @@ export const runtime = 'nodejs';
  */
 export async function GET(_req: NextRequest) {
   const base = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
-  const model = process.env.OLLAMA_MODEL || 'llama3';
+  const model = process.env.OLLAMA_MODEL || 'llama3.2:1b';
   try {
     const res = await fetch(`${base}/api/tags`, { signal: AbortSignal.timeout(2000) });
     if (!res.ok) return NextResponse.json({ ok: false, model });
